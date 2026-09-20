@@ -134,34 +134,8 @@ footer{padding:24px 0 12px;text-align:center;font-size:12px;color:var(--text-mut
 
   <section id="kategori">
     <p class="eyebrow">Pilih kategori jasa</p>
-    <div class="cat-grid">
-      <div class="cat-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11L12 4l9 7"/><path d="M5 10v9h14v-9"/></svg>
-        <h3>Rumah, kebun &amp; kolam</h3>
-        <p>Bersih-bersih, taman, kolam, cuci kendaraan</p>
-      </div>
-      <div class="cat-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="14" r="4"/><circle cx="6" cy="7" r="1.6"/><circle cx="18" cy="7" r="1.6"/><circle cx="12" cy="5" r="1.6"/></svg>
-        <h3>Hewan peliharaan</h3>
-        <p>Titip harian, jalan-jalan, kasih makan</p>
-      </div>
-      <div class="cat-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>
-        <h3>Errand &amp; titip</h3>
-        <p>Antar dokumen, beliin barang, jastip</p>
-      </div>
-      <div class="cat-card">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
-        <h3>Teknis &amp; kreatif</h3>
-        <p>Visualisasi 3D, terrarium custom</p>
-      </div>
-      <div class="cat-card wide">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14 14.5c2.8.3 5 2.5 5 5.5"/></svg>
-        <div>
-          <h3>Teman aktivitas</h3>
-          <p>Hiking, camping, atau sekadar ngobrol santai di tempat umum</p>
-        </div>
-      </div>
+    <div class="cat-grid" id="cat-grid">
+      <p style="grid-column:1/-1;font-size:13px;color:var(--text-muted);">Memuat daftar jasa…</p>
     </div>
   </section>
 
@@ -228,15 +202,59 @@ footer{padding:24px 0 12px;text-align:center;font-size:12px;color:var(--text-mut
 <script>
 // GANTI nomor WA dan link Cal.com di sini sebelum deploy
 const WA_NUMBER = "6285861138571"; // ganti dengan nomor asli, format 62xxx tanpa +/spasi
-const WA_MESSAGE = encodeURIComponent("Halo Jingga, saya mau tanya soal jasa...");
 const CAL_LINK = "https://cal.com/rizalazir12"; // ganti setelah setup Cal.com
 
 document.querySelectorAll('#wa-top, #wa-bottom').forEach(el => {
-  el.href = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
+  el.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Halo Jingga, saya mau tanya soal jasa...")}`;
   el.target = "_blank";
 });
 document.getElementById('booking-bottom').href = CAL_LINK;
 document.getElementById('booking-bottom').target = "_blank";
+
+// Urutan kategori & ikon tetap — sesuai rancangan awal, gak berubah walau data kosong
+const CATEGORY_ORDER = [
+  { key: "Rumah/Kebun/Kolam", label: "Rumah, kebun & kolam",
+    icon: '<path d="M3 11L12 4l9 7"/><path d="M5 10v9h14v-9"/>' },
+  { key: "Hewan Peliharaan", label: "Hewan peliharaan",
+    icon: '<circle cx="12" cy="14" r="4"/><circle cx="6" cy="7" r="1.6"/><circle cx="18" cy="7" r="1.6"/><circle cx="12" cy="5" r="1.6"/>' },
+  { key: "Errand & Titip", label: "Errand & titip",
+    icon: '<path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/>' },
+  { key: "Teknis & Kreatif", label: "Teknis & kreatif",
+    icon: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>' },
+  { key: "Teman Aktivitas", label: "Teman aktivitas",
+    icon: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14 14.5c2.8.3 5 2.5 5 5.5"/>' },
+  { key: "Bantuan Acara & Event", label: "Bantuan acara & event",
+    icon: '<rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>' },
+  { key: "Asisten & Administratif", label: "Asisten & administratif",
+    icon: '<path d="M9 3h6l1 3h4v4l-3 1 3 1v4h-4l-1 3H9l-1-3H4v-4l3-1-3-1V6h4l1-3z"/><circle cx="12" cy="12" r="2.5"/>' },
+];
+
+async function loadServices() {
+  const grid = document.getElementById('cat-grid');
+  try {
+    const res = await fetch('/.netlify/functions/get-services');
+    const services = await res.json();
+
+    grid.innerHTML = '';
+    CATEGORY_ORDER.forEach(cat => {
+      const items = services.filter(s => s.kategori === cat.key);
+      const card = document.createElement('div');
+      card.className = 'cat-card' + (cat.key === 'Teman Aktivitas' ? ' wide' : '');
+      const itemsHtml = items.length
+        ? items.map(s => `<p style="margin-top:4px;">${s.nama}${s.harga ? ' — ' + s.harga : ''}</p>`).join('')
+        : '<p style="margin-top:4px;color:var(--text-muted);">Belum ada jasa diisi</p>';
+      card.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">${cat.icon}</svg>
+        <h3>${cat.label}</h3>
+        ${itemsHtml}
+      `;
+      grid.appendChild(card);
+    });
+  } catch (err) {
+    grid.innerHTML = '<p style="grid-column:1/-1;font-size:13px;color:var(--text-muted);">Gagal memuat data jasa. Coba refresh, atau cek koneksi Notion.</p>';
+  }
+}
+loadServices();
 </script>
 
 </body>
