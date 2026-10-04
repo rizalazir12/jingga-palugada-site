@@ -89,6 +89,11 @@ section{padding:28px 0;border-top:1px solid var(--border);}
 .testi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:10px;}
 .testi p{font-size:14px;}
 .testi span{display:block;margin-top:10px;font-size:12px;color:var(--text-muted);}
+.testi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.testi-grid img{width:100%;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer;display:block;}
+.testi-lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.testi-lightbox.open{display:flex;}
+.testi-lightbox img{max-width:100%;max-height:90vh;border-radius:8px;}
 
 /* profile */
 .profile-row{display:flex;gap:14px;align-items:flex-start;}
@@ -166,9 +171,8 @@ footer{padding:24px 0 12px;text-align:center;font-size:12px;color:var(--text-mut
 
   <section>
     <p class="eyebrow">Kata klien</p>
-    <div class="testi">
-      <p>"Kolam rumah dibersihin rapi, komunikasinya juga enak."</p>
-      <span>— klien area Serpong</span>
+    <div class="testi-grid" id="testi-grid">
+      <p style="font-size:13px;color:var(--text-muted);">Memuat testimoni…</p>
     </div>
   </section>
 
@@ -182,8 +186,8 @@ footer{padding:24px 0 12px;text-align:center;font-size:12px;color:var(--text-mut
       </div>
     </div>
     <ul class="profile-facts">
-      <li><strong>Kendaraan:</strong> motor Yamaha Vixion — sebagai acuan untuk jasa antar/jastip</li>
-      <li><strong>Jam operasional:</strong> Sabtu & Minggu, 08.00–20.00</li>
+      <li><strong>Kendaraan:</strong> motor & mobil — relevan untuk jasa antar/jastip</li>
+      <li><strong>Jam operasional:</strong> setiap hari, 08.00–20.00</li>
       <li><strong>Catatan:</strong> plat nomor & detail konfirmasi dikirim via WhatsApp setelah booking, bukan ditampilkan publik</li>
     </ul>
   </section>
@@ -201,8 +205,8 @@ footer{padding:24px 0 12px;text-align:center;font-size:12px;color:var(--text-mut
 
 <script>
 // GANTI nomor WA dan link Cal.com di sini sebelum deploy
-const WA_NUMBER = "6285861138571"; // ganti dengan nomor asli, format 62xxx tanpa +/spasi
-const CAL_LINK = "https://cal.com/rizalazir12"; // ganti setelah setup Cal.com
+const WA_NUMBER = "6285861138571";
+const CAL_LINK = "https://cal.com/rizalazir12";
 
 document.querySelectorAll('#wa-top, #wa-bottom').forEach(el => {
   el.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Halo Jingga, saya mau tanya soal jasa...")}`;
@@ -255,6 +259,40 @@ async function loadServices() {
   }
 }
 loadServices();
+
+async function loadTestimonials() {
+  const grid = document.getElementById('testi-grid');
+  try {
+    const res = await fetch('/.netlify/functions/get-testimonials');
+    const testimonials = await res.json();
+
+    if (!testimonials.length) {
+      grid.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Belum ada testimoni diunggah.</p>';
+      return;
+    }
+
+    grid.innerHTML = testimonials.map(t =>
+      `<img src="${t.gambar}" alt="${t.keterangan || 'Testimoni klien'}" loading="lazy" onclick="openLightbox('${t.gambar}')">`
+    ).join('');
+  } catch (err) {
+    grid.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Gagal memuat testimoni.</p>';
+  }
+}
+loadTestimonials();
+
+function openLightbox(src) {
+  const box = document.getElementById('testi-lightbox');
+  box.querySelector('img').src = src;
+  box.classList.add('open');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.createElement('div');
+  box.id = 'testi-lightbox';
+  box.className = 'testi-lightbox';
+  box.innerHTML = '<img src="">';
+  box.onclick = () => box.classList.remove('open');
+  document.body.appendChild(box);
+});
 </script>
 
 </body>
